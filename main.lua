@@ -1298,16 +1298,24 @@ local Utility = {
     end
 }
 
---// ==================== 13. GUI ИНТЕРФЕЙС ====================
+--// ==================== 13. GUI ИНТЕРФЕЙС (ИСПРАВЛЕНО ДЛЯ XENO) ====================
 local GUI = {
     Main = nil,
-    
+    ScreenGui = nil,
+
     Init = function()
+        -- Создаём GUI с защитой (если доступно)
         local ScreenGui = Instance.new("ScreenGui")
         ScreenGui.Name = "VayUI_" .. math.random(1000, 9999)
-        ScreenGui.Parent = Services.CoreGui
         ScreenGui.ResetOnSpawn = false
-        
+
+        -- Защита в Xeno
+        if syn and syn.protect_gui then
+            syn.protect_gui(ScreenGui)
+        end
+
+        ScreenGui.Parent = Services.CoreGui
+
         local Main = Instance.new("Frame")
         Main.Name = "MainFrame"
         Main.Size = UDim2.new(0, 600, 0, 420)
@@ -1316,13 +1324,14 @@ local GUI = {
         Main.BorderSizePixel = 0
         Main.Visible = true
         Main.Parent = ScreenGui
-        
+
+        -- Title Bar
         local TitleBar = Instance.new("Frame")
         TitleBar.Size = UDim2.new(1, 0, 0, 35)
         TitleBar.BackgroundColor3 = Color3.fromRGB(255, 0, 128)
         TitleBar.BorderSizePixel = 0
         TitleBar.Parent = Main
-        
+
         local Title = Instance.new("TextLabel")
         Title.Size = UDim2.new(1, -40, 1, 0)
         Title.Position = UDim2.new(0, 10, 0, 0)
@@ -1333,7 +1342,7 @@ local GUI = {
         Title.TextSize = 14
         Title.TextXAlignment = Enum.TextXAlignment.Left
         Title.Parent = TitleBar
-        
+
         local CloseBtn = Instance.new("TextButton")
         CloseBtn.Size = UDim2.new(0, 35, 0, 35)
         CloseBtn.Position = UDim2.new(1, -35, 0, 0)
@@ -1344,24 +1353,26 @@ local GUI = {
         CloseBtn.TextSize = 18
         CloseBtn.Parent = TitleBar
         CloseBtn.MouseButton1Click:Connect(function() Main.Visible = false end)
-        
+
+        -- Tab Holder
         local TabHolder = Instance.new("Frame")
         TabHolder.Size = UDim2.new(0, 130, 1, -35)
         TabHolder.Position = UDim2.new(0, 0, 0, 35)
         TabHolder.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
         TabHolder.BorderSizePixel = 0
         TabHolder.Parent = Main
-        
+
+        -- Content
         local Content = Instance.new("Frame")
         Content.Size = UDim2.new(1, -130, 1, -35)
         Content.Position = UDim2.new(0, 130, 0, 35)
         Content.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
         Content.BorderSizePixel = 0
         Content.Parent = Main
-        
+
         local Tabs = {}
         local CurrentTab = nil
-        
+
         local function CreateTab(name, icon)
             local Btn = Instance.new("TextButton")
             Btn.Size = UDim2.new(1, 0, 0, 35)
@@ -1373,7 +1384,7 @@ local GUI = {
             Btn.TextSize = 12
             Btn.TextXAlignment = Enum.TextXAlignment.Left
             Btn.Parent = TabHolder
-            
+
             local Page = Instance.new("ScrollingFrame")
             Page.Size = UDim2.new(1, 0, 1, 0)
             Page.Visible = false
@@ -1382,9 +1393,9 @@ local GUI = {
             Page.ScrollBarThickness = 4
             Page.ScrollBarImageColor3 = Color3.fromRGB(255,0,128)
             Page.Parent = Content
-            
+
             local Tab = {Button = Btn, Page = Page, Y = 10}
-            
+
             Btn.MouseButton1Click:Connect(function()
                 if CurrentTab then
                     CurrentTab.Page.Visible = false
@@ -1394,17 +1405,17 @@ local GUI = {
                 Btn.BackgroundColor3 = Color3.fromRGB(255, 0, 128)
                 CurrentTab = Tab
             end)
-            
+
             table.insert(Tabs, Tab)
             if #Tabs == 1 then
                 Btn.BackgroundColor3 = Color3.fromRGB(255,0,128)
                 Page.Visible = true
                 CurrentTab = Tab
             end
-            
+
             return Tab
         end
-        
+
         local function AddButton(Tab, text, callback)
             local Btn = Instance.new("TextButton")
             Btn.Size = UDim2.new(1, -20, 0, 30)
@@ -1415,25 +1426,25 @@ local GUI = {
             Btn.Font = Enum.Font.Gotham
             Btn.TextSize = 11
             Btn.Parent = Tab.Page
-            
+
             Btn.MouseButton1Click:Connect(function()
                 pcall(callback)
                 Utils:Tween(Btn, {BackgroundColor3 = Color3.fromRGB(255, 255, 255)}, 0.1)
                 wait(0.1)
                 Utils:Tween(Btn, {BackgroundColor3 = Color3.fromRGB(45, 45, 45)}, 0.1)
             end)
-            
+
             Tab.Y = Tab.Y + 35
             Tab.Page.CanvasSize = UDim2.new(0, 0, 0, Tab.Y + 10)
         end
-        
+
         local function AddToggle(Tab, text, default, callback)
             local Frame = Instance.new("Frame")
             Frame.Size = UDim2.new(1, -20, 0, 30)
             Frame.Position = UDim2.new(0, 10, 0, Tab.Y)
             Frame.BackgroundTransparency = 1
             Frame.Parent = Tab.Page
-            
+
             local Label = Instance.new("TextLabel")
             Label.Size = UDim2.new(1, -45, 1, 0)
             Label.BackgroundTransparency = 1
@@ -1443,26 +1454,26 @@ local GUI = {
             Label.TextSize = 11
             Label.TextXAlignment = Enum.TextXAlignment.Left
             Label.Parent = Frame
-            
+
             local Switch = Instance.new("TextButton")
             Switch.Size = UDim2.new(0, 36, 0, 18)
             Switch.Position = UDim2.new(1, -36, 0.5, -9)
             Switch.BackgroundColor3 = default and Color3.fromRGB(0, 255, 128) or Color3.fromRGB(80, 80, 80)
             Switch.Text = ""
             Switch.Parent = Frame
-            
+
             local state = default
-            
+
             Switch.MouseButton1Click:Connect(function()
                 state = not state
                 Switch.BackgroundColor3 = state and Color3.fromRGB(0, 255, 128) or Color3.fromRGB(80, 80, 80)
                 pcall(callback, state)
             end)
-            
+
             Tab.Y = Tab.Y + 35
             Tab.Page.CanvasSize = UDim2.new(0, 0, 0, Tab.Y + 10)
         end
-        
+
         -- Создание табов
         local MainTab = CreateTab("Главная", "🏠")
         local AdminTab = CreateTab("Админ", "👑")
@@ -1474,7 +1485,7 @@ local GUI = {
         local FarmTab = CreateTab("Фарм", "🌾")
         local TPTab = CreateTab("Телепорты", "📍")
         local UtilTab = CreateTab("Утилиты", "🔧")
-        
+
         -- Главная
         AddButton(MainTab, "🔄 Респавн", function() LocalPlayer:LoadCharacter() end)
         AddButton(MainTab, "📊 Статистика", function()
@@ -1484,25 +1495,25 @@ local GUI = {
                 s.Kills, s.TrollsGiven, s.ItemsGiven, s.CommandsExecuted
             ), 5)
         end)
-        
+
         -- Админ
         AddButton(AdminTab, "🔍 Обнаружить админку", function() Admin:DetectSystem() end)
         AddButton(AdminTab, "🎯 Цель: СЕБЕ", function() Admin:SetTarget("me") end)
         AddButton(AdminTab, "🌐 Цель: ВСЕ", function() Admin:SetTarget("all") end)
         AddToggle(AdminTab, "🔄 Авто-респавн", true, function(v) Vay.Settings.Admin.AutoRespawn = v end)
-        
+
         -- Тролли (ТОЛЬКО ТВОЙ СПИСОК)
         for _, troll in ipairs(CustomLists.Trolls) do
             AddButton(TrollTab, troll, function() Admin:GiveTroll(troll) end)
         end
         AddButton(TrollTab, "🎁 ВЫДАТЬ ВСЕХ ТРОЛЛЕЙ", function() Admin:GiveAllTrolls() end)
-        
+
         -- Предметы (ТОЛЬКО ТВОЙ СПИСОК)
         for _, item in ipairs(CustomLists.Items) do
             AddButton(ItemTab, item, function() Admin:GiveItem(item) end)
         end
         AddButton(ItemTab, "🎁 ВЫДАТЬ ВСЕ ПРЕДМЕТЫ", function() Admin:GiveAllItems() end)
-        
+
         -- Бой
         AddToggle(CombatTab, "💀 Kill Aura", false, function(v) Vay.Settings.Combat.KillAura = v end)
         AddToggle(CombatTab, "🎯 Aimbot", false, function(v) Vay.Settings.Combat.Aimbot = v end)
@@ -1510,14 +1521,14 @@ local GUI = {
         AddToggle(CombatTab, "🌀 Spinbot", false, function(v) Vay.Settings.Combat.SpinBot = v end)
         AddToggle(CombatTab, "🛡️ Anti-Stun", false, function(v) Vay.Settings.Combat.AntiStun = v end)
         AddToggle(CombatTab, "💨 Infinite Stamina", false, function(v) Vay.Settings.Combat.InfiniteStamina = v end)
-        
+
         -- Движение
         AddToggle(MoveTab, "🦅 Fly", false, function(v) Movement:SetFly(v, 50) end)
         AddToggle(MoveTab, "🚶 Noclip", false, function(v) Movement:SetNoclip(v) end)
         AddToggle(MoveTab, "🏃 Speed", false, function(v) Vay.Settings.Movement.SpeedEnabled = v; if v then Movement:SetSpeed(50) end end)
         AddToggle(MoveTab, "🦘 Inf Jump", false, function(v) Movement:SetInfJump(v) end)
         AddToggle(MoveTab, "🏃 BHop", false, function(v) Vay.Settings.Movement.BHop = v end)
-        
+
         -- Визуал
         AddToggle(VisualTab, "👁️ ESP", false, function(v) Vay.Settings.Visual.ESP = v end)
         AddToggle(VisualTab, "☀️ Fullbright", false, function(v) Visual:SetFullbright(v) end)
@@ -1525,19 +1536,19 @@ local GUI = {
         AddToggle(VisualTab, "🔍 X-Ray", false, function(v) Vay.Settings.Visual.XRay = v end)
         AddToggle(VisualTab, "🎥 Third Person", false, function(v) Visual:SetThirdPerson(v) end)
         AddToggle(VisualTab, "🎥 Freecam", false, function(v) Visual:SetFreecam(v) end)
-        
+
         -- Фарм
         AddToggle(FarmTab, "🤖 Auto Farm", false, function(v) Vay.Settings.Farm.AutoFarm = v end)
         AddToggle(FarmTab, "📦 Auto Collect", false, function(v) Vay.Settings.Farm.AutoCollect = v end)
         AddToggle(FarmTab, "🧲 Item Vacuum", false, function(v) Vay.Settings.Farm.ItemVacuum = v end)
         AddToggle(FarmTab, "📦 Auto Open Chests", false, function(v) Vay.Settings.Farm.AutoOpenChests = v end)
-        
+
         -- Телепорты
         AddButton(TPTab, "📍 Spawn", function() Teleports:ToLocation("Spawn") end)
         AddButton(TPTab, "📍 Main Hall", function() Teleports:ToLocation("MainHall") end)
         AddButton(TPTab, "📍 Shop", function() Teleports:ToLocation("Shop") end)
         AddButton(TPTab, "💾 Save Location", function() Teleports:SaveLocation("Custom") end)
-        
+
         -- Утилиты
         AddButton(UtilTab, "🔄 Server Hop", function() Utility:ServerHop() end)
         AddButton(UtilTab, "🚀 Rejoin", function() Utility:Rejoin() end)
@@ -1547,7 +1558,7 @@ local GUI = {
         AddButton(UtilTab, "💾 Save Config", function() Utility:SaveConfig() end)
         AddButton(UtilTab, "📂 Load Config", function() Utility:LoadConfig() end)
         AddButton(UtilTab, "❌ Закрыть меню", function() Main.Visible = false end)
-        
+
         -- Drag
         local dragging, dragStart, frameStart
         TitleBar.InputBegan:Connect(function(input)
@@ -1573,47 +1584,59 @@ local GUI = {
                 )
             end
         end)
-        
-        -- Горячие клавиши (исправлено)
-        local function ToggleGUI()
-            Main.Visible = not Main.Visible
-        end
-        
-        -- Способ 1: InputBegan без фильтра gpe
-        Services.UserInputService.InputBegan:Connect(function(input, gpe)
-            if input.KeyCode == Enum.KeyCode.RightControl or 
-               input.KeyCode == Enum.KeyCode.LeftControl or 
-               input.KeyCode == Enum.KeyCode.F4 or 
-               input.KeyCode == Enum.KeyCode.Insert then
-                ToggleGUI()
-            end
-        end)
-        
-        -- Способ 2: резервное отслеживание RightControl через IsKeyDown
-        local wasRightControlPressed = false
-        Services.RunService.RenderStepped:Connect(function()
-            local isPressed = Services.UserInputService:IsKeyDown(Enum.KeyCode.RightControl)
-            if isPressed and not wasRightControlPressed then
-                ToggleGUI()
-            end
-            wasRightControlPressed = isPressed
-        end)
-        
-        -- Чат-команда
-        LocalPlayer.Chatted:Connect(function(msg)
-            if msg == "/vay" or msg == "/menu" or msg == "/gui" then
-                ToggleGUI()
-            end
-        end)
-        
+
         GUI.Main = Main
+        GUI.ScreenGui = ScreenGui
+
         Utils:Notify("✅ VayTrollge", "Меню загружено! Right Control или /vay", 5)
-        
         return GUI
     end
 }
 
---// ==================== 14. ИНИЦИАЛИЗАЦИЯ И ЗАПУСК ====================
+--// ==================== 14. ОБРАБОТКА КЛАВИШ (ИСПРАВЛЕНО) ====================
+local function SetupKeybind()
+    local UIS = Services.UserInputService
+    local RunService = Services.RunService
+    local LocalPlayer = Services.Players.LocalPlayer
+
+    -- Функция переключения
+    local function ToggleGUI()
+        if GUI.Main then
+            GUI.Main.Visible = not GUI.Main.Visible
+            print("[Vay] GUI toggled to: " .. tostring(GUI.Main.Visible))
+        else
+            warn("[Vay] GUI.Main не существует!")
+        end
+    end
+
+    -- Метод 1: InputBegan (может не работать в Xeno, оставляем для совместимости)
+    UIS.InputBegan:Connect(function(input, gameProcessed)
+        if input.KeyCode == Enum.KeyCode.RightControl then
+            print("[Vay] RightControl нажата (InputBegan)")
+            ToggleGUI()
+        end
+    end)
+
+    -- Метод 2: Ручное отслеживание состояния (НАДЁЖНЫЙ ДЛЯ XENO)
+    local rightCtrlPressed = false
+    RunService.RenderStepped:Connect(function()
+        local isPressed = UIS:IsKeyDown(Enum.KeyCode.RightControl)
+        if isPressed and not rightCtrlPressed then
+            print("[Vay] RightControl нажата (RenderStepped)")
+            ToggleGUI()
+        end
+        rightCtrlPressed = isPressed
+    end)
+
+    -- Чат-команда
+    LocalPlayer.Chatted:Connect(function(msg)
+        if msg == "/vay" or msg == "/menu" or msg == "/gui" then
+            ToggleGUI()
+        end
+    end)
+end
+
+--// ==================== 15. ИНИЦИАЛИЗАЦИЯ И ЗАПУСК ====================
 local function Init()
     Protection:Init()
     Admin:Init()
@@ -1623,7 +1646,8 @@ local function Init()
     Farm:Init()
     Utility:Init()
     GUI:Init()
-    
+    SetupKeybind()  -- Настройка клавиш после создания GUI
+
     _G.Vay = {
         Admin = Admin,
         Visual = Visual,
@@ -1640,7 +1664,7 @@ local function Init()
         GiveAllTrolls = function() return Admin:GiveAllTrolls() end,
         GiveAllItems = function() return Admin:GiveAllItems() end
     }
-    
+
     print("=========================================")
     print("   VAYTROLLGE v" .. Vay.Version)
     print("   Троллей: " .. #CustomLists.Trolls)
@@ -1650,3 +1674,4 @@ local function Init()
 end
 
 Init()
+
