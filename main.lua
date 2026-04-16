@@ -1,10 +1,3 @@
---[[
-    🔥 VAYTROLLGE - TROLLGE CONVENTIONS ULTIMATE
-    📦 Версия: 24.0.0
-    ✅ 100% работа в Xeno (исправлен GUI)
-    🎯 Расширенный функционал: тролли, предметы, ESP, Fly, Noclip, телепорты, админ-панель
-]]
-
 --// ==================== 1. СЛУЖБЫ ====================
 local Services = {
     Players = game:GetService("Players"),
