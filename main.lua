@@ -762,7 +762,7 @@ local GUI = {
     Init = function()
         -- Выбор правильного родителя для Xeno
         local parent = Services.CoreGui
-        if gethui then local success, protected = pcall(gethui) if success and protected then parent = protected end end
+        if gethui then local success, protected = pcall(gethui) if success and protected then parent = LocalPlayer:WaitForChild("PlayerGui")
         -- Альтернатива: если GUI не виден, можно попробовать PlayerGui (раскомментируйте следующую строку)
         -- parent = LocalPlayer:WaitForChild("PlayerGui")
 
