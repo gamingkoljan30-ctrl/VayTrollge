@@ -1297,24 +1297,33 @@ local Utility = {
         end
     end
 }
-
---// ==================== 13. GUI ИНТЕРФЕЙС (ИСПРАВЛЕНО ДЛЯ XENO) ====================
+--// ==================== 13. GUI ИНТЕРФЕЙС (УЛУЧШЕННЫЙ ДЛЯ XENO) ====================
 local GUI = {
     Main = nil,
     ScreenGui = nil,
 
     Init = function()
-        -- Создаём GUI с защитой (если доступно)
+        -- Используем gethui() если доступно (Xeno) для максимальной защиты
+        local parent = Services.CoreGui
+        if gethui then
+            local success, protectedGui = pcall(gethui)
+            if success and protectedGui then
+                parent = protectedGui
+            end
+        end
+
         local ScreenGui = Instance.new("ScreenGui")
         ScreenGui.Name = "VayUI_" .. math.random(1000, 9999)
         ScreenGui.ResetOnSpawn = false
+        ScreenGui.Enabled = true
+        ScreenGui.DisplayOrder = 999  -- Поверх всего
 
         -- Защита в Xeno
         if syn and syn.protect_gui then
             syn.protect_gui(ScreenGui)
         end
 
-        ScreenGui.Parent = Services.CoreGui
+        ScreenGui.Parent = parent
 
         local Main = Instance.new("Frame")
         Main.Name = "MainFrame"
@@ -1323,6 +1332,8 @@ local GUI = {
         Main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
         Main.BorderSizePixel = 0
         Main.Visible = true
+        Main.Active = true
+        Main.Draggable = false
         Main.Parent = ScreenGui
 
         -- Title Bar
@@ -1502,13 +1513,13 @@ local GUI = {
         AddButton(AdminTab, "🌐 Цель: ВСЕ", function() Admin:SetTarget("all") end)
         AddToggle(AdminTab, "🔄 Авто-респавн", true, function(v) Vay.Settings.Admin.AutoRespawn = v end)
 
-        -- Тролли (ТОЛЬКО ТВОЙ СПИСОК)
+        -- Тролли
         for _, troll in ipairs(CustomLists.Trolls) do
             AddButton(TrollTab, troll, function() Admin:GiveTroll(troll) end)
         end
         AddButton(TrollTab, "🎁 ВЫДАТЬ ВСЕХ ТРОЛЛЕЙ", function() Admin:GiveAllTrolls() end)
 
-        -- Предметы (ТОЛЬКО ТВОЙ СПИСОК)
+        -- Предметы
         for _, item in ipairs(CustomLists.Items) do
             AddButton(ItemTab, item, function() Admin:GiveItem(item) end)
         end
@@ -1593,36 +1604,43 @@ local GUI = {
     end
 }
 
---// ==================== 14. ОБРАБОТКА КЛАВИШ (ИСПРАВЛЕНО) ====================
+--// ==================== 14. ОБРАБОТКА КЛАВИШ (УСИЛЕННАЯ) ====================
 local function SetupKeybind()
     local UIS = Services.UserInputService
     local RunService = Services.RunService
     local LocalPlayer = Services.Players.LocalPlayer
 
-    -- Функция переключения
+    -- Функция принудительного показа
     local function ToggleGUI()
+        if not GUI.ScreenGui then return end
+        -- Принудительно включаем ScreenGui и Main
+        GUI.ScreenGui.Enabled = true
         if GUI.Main then
             GUI.Main.Visible = not GUI.Main.Visible
-            print("[Vay] GUI toggled to: " .. tostring(GUI.Main.Visible))
+            -- Если вдруг Main провалился в nil
+            if GUI.Main.Visible then
+                GUI.Main.Position = UDim2.new(0.5, -300, 0.5, -210) -- сброс позиции
+            end
+            print("[Vay] GUI Visible: " .. tostring(GUI.Main.Visible))
         else
-            warn("[Vay] GUI.Main не существует!")
+            warn("[Vay] GUI.Main missing, recreating?")
         end
     end
 
-    -- Метод 1: InputBegan (может не работать в Xeno, оставляем для совместимости)
+    -- Метод 1: InputBegan
     UIS.InputBegan:Connect(function(input, gameProcessed)
         if input.KeyCode == Enum.KeyCode.RightControl then
-            print("[Vay] RightControl нажата (InputBegan)")
+            print("[Vay] InputBegan RightControl")
             ToggleGUI()
         end
     end)
 
-    -- Метод 2: Ручное отслеживание состояния (НАДЁЖНЫЙ ДЛЯ XENO)
+    -- Метод 2: RenderStepped (основной)
     local rightCtrlPressed = false
     RunService.RenderStepped:Connect(function()
         local isPressed = UIS:IsKeyDown(Enum.KeyCode.RightControl)
         if isPressed and not rightCtrlPressed then
-            print("[Vay] RightControl нажата (RenderStepped)")
+            print("[Vay] RenderStepped RightControl")
             ToggleGUI()
         end
         rightCtrlPressed = isPressed
@@ -1636,7 +1654,7 @@ local function SetupKeybind()
     end)
 end
 
---// ==================== 15. ИНИЦИАЛИЗАЦИЯ И ЗАПУСК ====================
+--// ==================== 15. ИНИЦИАЛИЗАЦИЯ ====================
 local function Init()
     Protection:Init()
     Admin:Init()
@@ -1646,7 +1664,7 @@ local function Init()
     Farm:Init()
     Utility:Init()
     GUI:Init()
-    SetupKeybind()  -- Настройка клавиш после создания GUI
+    SetupKeybind()
 
     _G.Vay = {
         Admin = Admin,
@@ -1675,3 +1693,5 @@ end
 
 Init()
 
+                        
+        
