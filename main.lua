@@ -3,6 +3,7 @@
     📦 Версия: 23.0.0
     ✅ Только указанные тролли и предметы
     🎯 Полный функционал админки и выдачи
+    🔧 Исправлено открытие по RightControl
 ]]
 
 --// ==================== 1. ИНИЦИАЛИЗАЦИЯ СЛУЖБ ====================
@@ -39,7 +40,6 @@ local Mouse = LocalPlayer:GetMouse()
 
 --// ==================== 2. ТВОИ СПИСКИ ТРОЛЛЕЙ И ПРЕДМЕТОВ ====================
 local CustomLists = {
-    -- ТОЛЬКО ТЕ ТРОЛЛИ, ЧТО ТЫ УКАЗАЛ
     Trolls = {
         "MULTIVERSAL WRATH",
         "Multiversal god:distortion",
@@ -67,7 +67,6 @@ local CustomLists = {
         "1 Year Anniversary"
     },
     
-    -- ТОЛЬКО ТЕ ПРЕДМЕТЫ, ЧТО ТЫ УКАЗАЛ
     Items = {
         "Omniversal chest",
         "crossover cup",
@@ -241,7 +240,6 @@ local Utils = {
 --// ==================== 5. ЗАЩИТА И АНТИ-ОБНАРУЖЕНИЕ ====================
 local Protection = {
     Init = function()
-        -- Отключение логов
         pcall(function()
             if Services.LogService then
                 for _, conn in ipairs(getconnections(Services.LogService.MessageOut)) do
@@ -255,7 +253,6 @@ local Protection = {
             end
         end)
         
-        -- Спуфинг print/warn
         local oldPrint = print
         local oldWarn = warn
         print = function(...)
@@ -271,7 +268,6 @@ local Protection = {
             end
         end
         
-        -- Перехват RemoteEvent
         pcall(function()
             local mt = getrawmetatable(game)
             if mt and mt.__namecall then
@@ -284,13 +280,11 @@ local Protection = {
                     if method == "FireServer" or method == "InvokeServer" then
                         local name = tostring(self):lower()
                         
-                        -- Блокировка античита
                         if name:match("anti") or name:match("cheat") or name:match("detect") or 
                            name:match("ban") or name:match("kick") then
                             return nil
                         end
                         
-                        -- Сохраняем админ-ремоты
                         if name:match("admin") or name:match("command") then
                             if not table.find(Vay.Cache.Remotes, self) then
                                 table.insert(Vay.Cache.Remotes, self)
@@ -304,7 +298,6 @@ local Protection = {
             end
         end)
         
-        -- Мониторинг античита
         spawn(function()
             while true do
                 wait(3)
@@ -321,7 +314,6 @@ local Protection = {
             end
         end)
         
-        -- Скрытие GUI
         local oldFind = game.FindFirstChild
         game.FindFirstChild = function(self, name, ...)
             local nameStr = tostring(name):lower()
@@ -378,7 +370,6 @@ local Admin = {
             end
         end
         
-        -- Поиск по RemoteEvent
         for _, obj in ipairs(rs:GetDescendants()) do
             if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
                 local name = obj.Name:lower()
@@ -430,7 +421,6 @@ local Admin = {
         local fullCmd = Admin.Prefix .. cmd
         local success = false
         
-        -- Через чат
         pcall(function()
             local chat = Services.ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents")
             if chat then
@@ -442,7 +432,6 @@ local Admin = {
             end
         end)
         
-        -- Через админ-ремоты
         if not success then
             for _, remote in ipairs(Admin.Remotes) do
                 pcall(function()
@@ -453,7 +442,6 @@ local Admin = {
             end
         end
         
-        -- Через getgc функции
         if not success then
             for _, data in ipairs(Admin.Functions) do
                 pcall(function()
@@ -464,7 +452,6 @@ local Admin = {
             end
         end
         
-        -- Поиск по всем ремотам
         if not success then
             for _, remote in ipairs(Services.ReplicatedStorage:GetDescendants()) do
                 if remote:IsA("RemoteEvent") then
@@ -500,7 +487,6 @@ local Admin = {
             end
         end
         
-        -- Выполняем все варианты команд
         for _, cmd in ipairs(commands) do
             if Admin:ExecuteCommand(cmd) then
                 success = true
@@ -508,7 +494,6 @@ local Admin = {
             wait(0.05)
         end
         
-        -- Прямая выдача через ProximityPrompt
         if not success then
             for _, obj in ipairs(Services.Workspace:GetDescendants()) do
                 if obj:IsA("ProximityPrompt") then
@@ -522,7 +507,6 @@ local Admin = {
             end
         end
         
-        -- Прямая выдача через ClickDetector
         if not success then
             for _, obj in ipairs(Services.Workspace:GetDescendants()) do
                 if obj:IsA("ClickDetector") then
@@ -536,7 +520,6 @@ local Admin = {
             end
         end
         
-        -- Клонирование существующего тролля
         if not success then
             for _, obj in ipairs(Services.Workspace:GetDescendants()) do
                 if obj:IsA("Model") and obj.Name:lower():find(trollName:lower()) then
@@ -549,7 +532,6 @@ local Admin = {
                         end
                         clone.Parent = Services.Workspace
                         
-                        -- Активируем скрипты
                         for _, script in ipairs(clone:GetDescendants()) do
                             if script:IsA("Script") then
                                 script.Enabled = true
@@ -605,7 +587,6 @@ local Admin = {
             wait(0.05)
         end
         
-        -- Прямой подбор предмета
         if not success then
             local root = Utils:GetRoot()
             if root then
@@ -623,7 +604,6 @@ local Admin = {
             end
         end
         
-        -- Поиск в хранилищах
         if not success then
             local storages = {Services.ReplicatedStorage, game:GetService("ServerStorage"), Services.Lighting}
             for _, storage in ipairs(storages) do
@@ -737,7 +717,6 @@ local Admin = {
         end
     end,
     
-    -- Дополнительные функции админки
     KickPlayer = function(name)
         local p = Utils:FindPlayer(name)
         if p then
@@ -1338,7 +1317,6 @@ local GUI = {
         Main.Visible = true
         Main.Parent = ScreenGui
         
-        -- Title Bar
         local TitleBar = Instance.new("Frame")
         TitleBar.Size = UDim2.new(1, 0, 0, 35)
         TitleBar.BackgroundColor3 = Color3.fromRGB(255, 0, 128)
@@ -1367,7 +1345,6 @@ local GUI = {
         CloseBtn.Parent = TitleBar
         CloseBtn.MouseButton1Click:Connect(function() Main.Visible = false end)
         
-        -- Tab Holder
         local TabHolder = Instance.new("Frame")
         TabHolder.Size = UDim2.new(0, 130, 1, -35)
         TabHolder.Position = UDim2.new(0, 0, 0, 35)
@@ -1375,7 +1352,6 @@ local GUI = {
         TabHolder.BorderSizePixel = 0
         TabHolder.Parent = Main
         
-        -- Content
         local Content = Instance.new("Frame")
         Content.Size = UDim2.new(1, -130, 1, -35)
         Content.Position = UDim2.new(0, 130, 0, 35)
@@ -1598,13 +1574,13 @@ local GUI = {
             end
         end)
         
-        -- Горячие клавиши
+        -- Горячие клавиши (исправлено)
         local function ToggleGUI()
             Main.Visible = not Main.Visible
         end
         
+        -- Способ 1: InputBegan без фильтра gpe
         Services.UserInputService.InputBegan:Connect(function(input, gpe)
-            if gpe then return end
             if input.KeyCode == Enum.KeyCode.RightControl or 
                input.KeyCode == Enum.KeyCode.LeftControl or 
                input.KeyCode == Enum.KeyCode.F4 or 
@@ -1613,6 +1589,17 @@ local GUI = {
             end
         end)
         
+        -- Способ 2: резервное отслеживание RightControl через IsKeyDown
+        local wasRightControlPressed = false
+        Services.RunService.RenderStepped:Connect(function()
+            local isPressed = Services.UserInputService:IsKeyDown(Enum.KeyCode.RightControl)
+            if isPressed and not wasRightControlPressed then
+                ToggleGUI()
+            end
+            wasRightControlPressed = isPressed
+        end)
+        
+        -- Чат-команда
         LocalPlayer.Chatted:Connect(function(msg)
             if msg == "/vay" or msg == "/menu" or msg == "/gui" then
                 ToggleGUI()
