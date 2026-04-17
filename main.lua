@@ -177,7 +177,7 @@ end
 local CustomLists = {
     Trolls = {
         "MULTIVERSAL WRATH", "Multiversal god:distortion", "Hakari", "Omniversal devour:AU",
-        "New god", "True Trollge", "Betrayal Of fear-Betrayal of fear Evolved", "Erlking Ruler",
+        "New god", "True Trollge", "Betrayal Of fear", "Betrayal of fear Evolved", "Erlking Ruler",
         "The God Devourer", "The Ultimate One", "Minos Prime", "Fatal Error sonic", "Subject 002",
         "Gojo", "Heian Sukuna", "The God Who Wept", "The voices Chaos", "Water Corruption",
         "Destruction", "Trollge Queen", "Scp-173", "EMPEROR RULER", "Firefly", "1 Year Anniversary",
@@ -469,7 +469,7 @@ local Admin = {
             if chat then
                 local say = chat:FindFirstChild("SayMessageRequest")
                 if say then
-                    say:FireServer(Admin.Prefix .. cmd, "All")
+                    say:FireServer(Admin.Prefix .. tostring(cmd), "All")
                     success = true
                 end
             end
@@ -494,7 +494,9 @@ local Admin = {
             warn("GiveTroll called without a name")
             return false
         end
+        name = tostring(name)
         local t = target or Settings.Admin.TargetPlayer
+        local targetName = t and tostring(t) or nil
         local cmds = {
             "give " .. name,
             "troll " .. name,
@@ -503,17 +505,17 @@ local Admin = {
             "summon " .. name
         }
 
-        if t then
+        if targetName then
             for i, c in ipairs(cmds) do
-                cmds[i] = c .. " " .. t
+                cmds[i] = c .. " " .. targetName
             end
         end
 
         -- Спочатку спробуємо Remotes напряму
         for _, remotePattern in ipairs({"give", "troll", "spawn", "add", "summon"}) do
             local fired = false
-            if t then
-                fired = RemoteHunter:SmartFire(remotePattern, name, t)
+            if targetName then
+                fired = RemoteHunter:SmartFire(remotePattern, name, targetName)
             else
                 fired = RemoteHunter:SmartFire(remotePattern, name)
             end
@@ -542,7 +544,9 @@ local Admin = {
             warn("GiveItem called without a name")
             return false
         end
+        name = tostring(name)
         local t = target or Settings.Admin.TargetPlayer
+        local targetName = t and tostring(t) or nil
         local cmds = {
             "giveitem " .. name,
             "item " .. name,
@@ -550,9 +554,9 @@ local Admin = {
             "additem " .. name
         }
 
-        if t then
+        if targetName then
             for i, c in ipairs(cmds) do
-                cmds[i] = c .. " " .. t
+                cmds[i] = c .. " " .. targetName
             end
         end
 
@@ -561,11 +565,10 @@ local Admin = {
             wait(0.05)
         end
 
-        if Settings.Admin.TargetPlayer or target then
-            local targetPlayer = target or Settings.Admin.TargetPlayer
-            return RemoteHunter:SmartFire("giveitem", name, targetPlayer) or
-                   RemoteHunter:SmartFire("item", name, targetPlayer) or
-                   RemoteHunter:SmartFire("give", name, targetPlayer)
+        if targetName then
+            return RemoteHunter:SmartFire("giveitem", name, targetName) or
+                   RemoteHunter:SmartFire("item", name, targetName) or
+                   RemoteHunter:SmartFire("give", name, targetName)
         end
 
         return RemoteHunter:SmartFire("giveitem", name) or
