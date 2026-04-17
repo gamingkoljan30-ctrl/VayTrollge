@@ -162,7 +162,18 @@ function Utils:GetAllChests()
     return chests
 end
 
-                            -- 4. Кастомные списки (ПОЛНЫЕ) - ДОЛЖНЫ БЫТЬ ПЕРЕД ЛЮБЫМ ИСПОЛЬЗОВАНИЕМ
+                            -- Безпечний виклик для GUI callback (автоматична обробка помилок)
+local function safeCall(func)
+    return function(...)
+        local success, err = pcall(func, ...)
+        if not success then
+            warn("[VayTrollge Error]", err)
+            Utils:Notify("❌", "Error: " .. tostring(err):sub(1, 50))
+        end
+    end
+end
+
+-- 4. Кастомные списки (ПОЛНЫЕ) - ДОЛЖНЫ БЫТЬ ПЕРЕД ЛЮБЫМ ИСПОЛЬЗОВАНИЕМ
 local CustomLists = {
     Trolls = {
         "MULTIVERSAL WRATH", "Multiversal god:distortion", "Hakari", "Omniversal devour:AU",
