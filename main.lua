@@ -412,7 +412,7 @@ local Admin = {
     Prefix = ";",
     RemoteFound = false,
 
-    DetectSystem = function()
+    DetectSystem = function(self)
         -- Шукаємо адмін-системи в ReplicatedStorage
         local rs = Services.ReplicatedStorage
 
@@ -431,9 +431,9 @@ local Admin = {
         for _, sys in ipairs(systems) do
             for _, path in ipairs(sys.Paths) do
                 if rs:FindFirstChild(path) then
-                    Admin.Detected = true
-                    Admin.Type = sys.Name
-                    Admin.Prefix = sys.Prefix
+                    self.Detected = true
+                    self.Type = sys.Name
+                    self.Prefix = sys.Prefix
                     print("Detected admin system:", sys.Name, "Prefix:", sys.Prefix)
                     return true
                 end
@@ -445,7 +445,7 @@ local Admin = {
         for _, remoteName in ipairs(possibleRemotes) do
             local found = RemoteHunter:FindRemote(remoteName)
             if found then
-                Admin.RemoteFound = true
+                self.RemoteFound = true
                 print("Found admin remote:", found.Name)
                 break
             end
@@ -454,7 +454,7 @@ local Admin = {
         return false
     end,
 
-    ExecuteCommand = function(cmd)
+    ExecuteCommand = function(self, cmd)
         -- Спробуємо через RemoteHunter
         local success = RemoteHunter:SmartFire("admin", cmd) or
                         RemoteHunter:SmartFire("cmd", cmd) or
@@ -469,7 +469,7 @@ local Admin = {
             if chat then
                 local say = chat:FindFirstChild("SayMessageRequest")
                 if say then
-                    say:FireServer(Admin.Prefix .. tostring(cmd), "All")
+                    say:FireServer(self.Prefix .. tostring(cmd), "All")
                     success = true
                 end
             end
@@ -489,7 +489,7 @@ local Admin = {
         return success
     end,
 
-    GiveTroll = function(name, target)
+    GiveTroll = function(self, name, target)
         if not name or name == "" then
             warn("GiveTroll called without a name")
             return false
@@ -528,7 +528,7 @@ local Admin = {
 
         -- Потім команди
         for _, c in ipairs(cmds) do
-            if Admin:ExecuteCommand(c) then
+            if self:ExecuteCommand(c) then
                 print("Command executed:", c)
                 return true
             end
@@ -539,7 +539,7 @@ local Admin = {
         return false
     end,
 
-    GiveItem = function(name, target)
+    GiveItem = function(self, name, target)
         if not name or name == "" then
             warn("GiveItem called without a name")
             return false
@@ -561,7 +561,7 @@ local Admin = {
         end
 
         for _, c in ipairs(cmds) do
-            if Admin:ExecuteCommand(c) then return true end
+            if self:ExecuteCommand(c) then return true end
             wait(0.05)
         end
 
@@ -576,20 +576,20 @@ local Admin = {
                RemoteHunter:SmartFire("give", name)
     end,
 
-    GiveAllTrolls = function()
+    GiveAllTrolls = function(self)
         local count = 0
         for _, troll in ipairs(CustomLists.Trolls) do
             local success = false
             if Settings.Admin.GiveToAll then
                 for _, p in ipairs(Services.Players:GetPlayers()) do
-                    if Admin:GiveTroll(troll, p.Name) then
+                    if self:GiveTroll(troll, p.Name) then
                         success = true
                         count = count + 1
                     end
                     wait(0.05)
                 end
             else
-                if Admin:GiveTroll(troll) then
+                if self:GiveTroll(troll) then
                     success = true
                     count = count + 1
                 end
@@ -599,20 +599,20 @@ local Admin = {
         Utils:Notify("✅", "Выдано троллей: " .. count)
     end,
 
-    GiveAllItems = function()
+    GiveAllItems = function(self)
         local count = 0
         for _, item in ipairs(CustomLists.Items) do
             local success = false
             if Settings.Admin.GiveToAll then
                 for _, p in ipairs(Services.Players:GetPlayers()) do
-                    if Admin:GiveItem(item, p.Name) then
+                    if self:GiveItem(item, p.Name) then
                         success = true
                         count = count + 1
                     end
                     wait(0.05)
                 end
             else
-                if Admin:GiveItem(item) then
+                if self:GiveItem(item) then
                     success = true
                     count = count + 1
                 end
@@ -622,7 +622,7 @@ local Admin = {
         Utils:Notify("✅", "Выдано предметов: " .. count)
     end,
 
-    KillAllTrolls = function()
+    KillAllTrolls = function(self)
         local count = 0
         for _, troll in ipairs(Utils:GetAllTrolls()) do
             local hum = troll:FindFirstChild("Humanoid")
@@ -634,7 +634,7 @@ local Admin = {
         Utils:Notify("💀", "Убито троллей: " .. count)
     end,
 
-    SetTarget = function(name)
+    SetTarget = function(self, name)
         if name == "all" then
             Settings.Admin.GiveToAll = true
             Settings.Admin.TargetPlayer = nil
@@ -652,7 +652,7 @@ local Admin = {
         end
     end,
 
-    TeleportToPlayer = function(name)
+    TeleportToPlayer = function(self, name)
         local p = Utils:FindPlayer(name)
         if p and p.Character then
             local root = Utils:GetRoot()
@@ -665,8 +665,8 @@ local Admin = {
         return false
     end,
 
-    KickPlayer = function(name)
-        local success = Admin:ExecuteCommand("kick " .. name)
+    KickPlayer = function(self, name)
+        local success = self:ExecuteCommand("kick " .. tostring(name))
         if not success then
             -- Спроба через Direct Kick
             local p = Utils:FindPlayer(name)
@@ -678,28 +678,28 @@ local Admin = {
         return success
     end,
 
-    BanPlayer = function(name)
-        return Admin:ExecuteCommand("ban " .. name)
+    BanPlayer = function(self, name)
+        return self:ExecuteCommand("ban " .. tostring(name))
     end,
 
-    KillPlayer = function(name)
-        return Admin:ExecuteCommand("kill " .. name)
+    KillPlayer = function(self, name)
+        return self:ExecuteCommand("kill " .. tostring(name))
     end,
 
-    RespawnPlayer = function(name)
-        return Admin:ExecuteCommand("respawn " .. name)
+    RespawnPlayer = function(self, name)
+        return self:ExecuteCommand("respawn " .. tostring(name))
     end,
 
-    BringPlayer = function(name)
-        return Admin:ExecuteCommand("bring " .. name)
+    BringPlayer = function(self, name)
+        return self:ExecuteCommand("bring " .. tostring(name))
     end,
 
-    FreezePlayer = function(name)
-        return Admin:ExecuteCommand("freeze " .. name)
+    FreezePlayer = function(self, name)
+        return self:ExecuteCommand("freeze " .. tostring(name))
     end,
 
-    GodModePlayer = function(name)
-        return Admin:ExecuteCommand("god " .. name)
+    GodModePlayer = function(self, name)
+        return self:ExecuteCommand("god " .. tostring(name))
     end
 }
 
