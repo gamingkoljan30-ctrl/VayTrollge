@@ -490,6 +490,10 @@ local Admin = {
     end,
 
     GiveTroll = function(name, target)
+        if not name or name == "" then
+            warn("GiveTroll called without a name")
+            return false
+        end
         local t = target or Settings.Admin.TargetPlayer
         local cmds = {
             "give " .. name,
@@ -507,7 +511,13 @@ local Admin = {
 
         -- Спочатку спробуємо Remotes напряму
         for _, remotePattern in ipairs({"give", "troll", "spawn", "add", "summon"}) do
-            if RemoteHunter:SmartFire(remotePattern, name, t or LocalPlayer.Name) then
+            local fired = false
+            if t then
+                fired = RemoteHunter:SmartFire(remotePattern, name, t)
+            else
+                fired = RemoteHunter:SmartFire(remotePattern, name)
+            end
+            if fired then
                 print("Successfully gave", name, "via", remotePattern)
                 return true
             end
@@ -528,6 +538,10 @@ local Admin = {
     end,
 
     GiveItem = function(name, target)
+        if not name or name == "" then
+            warn("GiveItem called without a name")
+            return false
+        end
         local t = target or Settings.Admin.TargetPlayer
         local cmds = {
             "giveitem " .. name,
@@ -545,6 +559,13 @@ local Admin = {
         for _, c in ipairs(cmds) do
             if Admin:ExecuteCommand(c) then return true end
             wait(0.05)
+        end
+
+        if Settings.Admin.TargetPlayer or target then
+            local targetPlayer = target or Settings.Admin.TargetPlayer
+            return RemoteHunter:SmartFire("giveitem", name, targetPlayer) or
+                   RemoteHunter:SmartFire("item", name, targetPlayer) or
+                   RemoteHunter:SmartFire("give", name, targetPlayer)
         end
 
         return RemoteHunter:SmartFire("giveitem", name) or
